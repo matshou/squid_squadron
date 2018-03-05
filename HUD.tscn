@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://HUD.gd" type="Script" id=1]
 [ext_resource path="res://assets/fonts/Xolonium-Regular.ttf" type="DynamicFontData" id=2]
+[ext_resource path="res://Life.tscn" type="PackedScene" id=3]
 
 [sub_resource type="DynamicFont" id=1]
 
@@ -117,6 +118,18 @@ process_mode = 1
 wait_time = 1.0
 one_shot = true
 autostart = false
+
+[node name="ThirdLife" parent="." index="4" instance=ExtResource( 3 )]
+
+position = Vector2( 39.2175, 45.035 )
+
+[node name="SecondLife" parent="." index="5" instance=ExtResource( 3 )]
+
+position = Vector2( 75.1929, 45.035 )
+
+[node name="FirstLife" parent="." index="6" instance=ExtResource( 3 )]
+
+position = Vector2( 112.217, 45.035 )
 
 [connection signal="pressed" from="StartButton" to="." method="_on_StartButton_pressed"]
 

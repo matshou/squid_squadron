@@ -6,7 +6,14 @@ var score
 func _ready():
 	randomize()
 
+# This is called whenever a player has been hit,
+# if he has run out of lives, it's game over.
+func player_hit():
+	if ($HUD.lose_life() == 0):
+		game_over()
+
 func game_over():
+	$Player.hide()
 	$Music.stop()
 	$DeathSound.play()
 	$ScoreTimer.stop()
@@ -15,6 +22,7 @@ func game_over():
 
 func new_game():
 	score = 0
+	$HUD.reset_lives()
 	$Music.play()
 	$HUD.update_score(score)
 	$HUD.show_message("Get Ready")

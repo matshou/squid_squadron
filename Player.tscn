@@ -53,6 +53,24 @@ position = Vector2( 0.00546095, 0.677383 )
 scale = Vector2( 2.56342, 1.01951 )
 shape = SubResource( 2 )
 
+[node name="HitRecovery" type="Timer" parent="." index="2"]
+
+process_mode = 1
+wait_time = 2.0
+one_shot = true
+autostart = false
+
+[node name="HitAnimation" type="Timer" parent="." index="3"]
+
+process_mode = 1
+wait_time = 0.15
+one_shot = false
+autostart = false
+
 [connection signal="body_entered" from="." to="." method="_on_Player_body_entered"]
+
+[connection signal="timeout" from="HitRecovery" to="." method="_on_HitRecovery_timeout"]
+
+[connection signal="timeout" from="HitAnimation" to="." method="_on_HitAnimation_timeout"]
 
 

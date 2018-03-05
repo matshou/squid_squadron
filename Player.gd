@@ -10,6 +10,7 @@ export (int) var FRICTION = 7
 var velocity = Velocity.new(self)
 var screensize  # size of the game window
 
+onready var HUD = get_node("../HUD")
 onready var debug = get_node("../Debug")
 
 class Velocity:
@@ -127,8 +128,8 @@ func _ready():
 	hide()
 	screensize = get_viewport_rect().size
 
-#	# Called every frame. Delta is time since last frame.
-#	# Update game logic here.
+# Called every frame. Delta is time since last frame.
+# Update game logic here.
 func _process(delta):
 	
 	velocity.resetInputVector()
@@ -164,6 +165,21 @@ func _process(delta):
 		$AnimatedSprite.flip_v = velocity.move_vector.y > 0
 
 func _on_Player_body_entered(body):
-	hide() # Player disappears after being hit
 	emit_signal("hit")
-	$CollisionShape2D.disabled = true
+	$CollisionShape2D.disabled = true   # makes the player invulnerable
+	if (HUD.lives_remaining > 0):
+		$HitRecovery.start()       # keeps the player invulnerable and blinking
+		$HitAnimation.start()      # regulates the blinking effect
+
+# Gets called when the player hit recovery phase ends,
+# stop blinking and become vulnerable again.
+func _on_HitRecovery_timeout():
+	$CollisionShape2D.disabled = false
+	if (!is_visible()): show()
+	$HitAnimation.stop()
+
+# This will produce a blinking affect indicating
+# that the player has been recently hit and is recovering
+func _on_HitAnimation_timeout():
+	if (is_visible()): hide()
+	else: show()

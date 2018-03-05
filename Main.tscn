@@ -16,7 +16,7 @@ _data = {
 "points": PoolVector2Array( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 480, 0, 0, 0, 0, 0, 480, 720, 0, 0, 0, 0, 0, 720, 0, 0, 0, 0, 0, 0 )
 }
 
-[node name="Main" type="Node" index="0"]
+[node name="Main" type="Node"]
 
 script = ExtResource( 1 )
 Mob = ExtResource( 2 )
@@ -96,7 +96,7 @@ margin_top = 0.0
 margin_right = 480.0
 margin_bottom = 63.0
 
-[connection signal="hit" from="Player" to="." method="game_over"]
+[connection signal="hit" from="Player" to="." method="player_hit"]
 
 [connection signal="timeout" from="MobTimer" to="." method="_on_MobTimer_timeout"]
 
