@@ -1,11 +1,13 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://Mob.tscn" type="PackedScene" id=2]
 [ext_resource path="res://assets/art/background.png" type="Texture" id=3]
 [ext_resource path="res://Player.tscn" type="PackedScene" id=4]
-[ext_resource path="res://HUD.tscn" type="PackedScene" id=5]
-[ext_resource path="res://Debug.tscn" type="PackedScene" id=6]
+[ext_resource path="res://assets/audio/House In a Forest Loop.ogg" type="AudioStream" id=5]
+[ext_resource path="res://assets/audio/gameover.wav" type="AudioStream" id=6]
+[ext_resource path="res://HUD.tscn" type="PackedScene" id=7]
+[ext_resource path="res://Debug.tscn" type="PackedScene" id=8]
 
 [sub_resource type="Curve2D" id=1]
 
@@ -28,33 +30,49 @@ _sections_unfolded = [ "Transform", "Visibility" ]
 
 [node name="Player" parent="." index="1" instance=ExtResource( 4 )]
 
-[node name="MobTimer" type="Timer" parent="." index="2"]
+[node name="Music" type="AudioStreamPlayer" parent="." index="2"]
+
+stream = ExtResource( 5 )
+volume_db = 0.0
+autoplay = false
+mix_target = 0
+bus = "Master"
+
+[node name="DeathSound" type="AudioStreamPlayer" parent="." index="3"]
+
+stream = ExtResource( 6 )
+volume_db = 0.0
+autoplay = false
+mix_target = 0
+bus = "Master"
+
+[node name="MobTimer" type="Timer" parent="." index="4"]
 
 process_mode = 1
 wait_time = 0.5
 one_shot = false
 autostart = false
 
-[node name="ScoreTimer" type="Timer" parent="." index="3"]
+[node name="ScoreTimer" type="Timer" parent="." index="5"]
 
 process_mode = 1
 wait_time = 1.0
 one_shot = false
 autostart = false
 
-[node name="StartTimer" type="Timer" parent="." index="4"]
+[node name="StartTimer" type="Timer" parent="." index="6"]
 
 process_mode = 1
 wait_time = 2.0
 one_shot = true
 autostart = false
 
-[node name="StartPosition" type="Position2D" parent="." index="5"]
+[node name="StartPosition" type="Position2D" parent="." index="7"]
 
 position = Vector2( 240, 450 )
 _sections_unfolded = [ "Transform" ]
 
-[node name="MobPath" type="Path2D" parent="." index="6"]
+[node name="MobPath" type="Path2D" parent="." index="8"]
 
 curve = SubResource( 1 )
 
@@ -68,9 +86,9 @@ cubic_interp = true
 loop = true
 lookahead = 4.0
 
-[node name="HUD" parent="." index="7" instance=ExtResource( 5 )]
+[node name="HUD" parent="." index="9" instance=ExtResource( 7 )]
 
-[node name="Debug" parent="." index="8" instance=ExtResource( 6 )]
+[node name="Debug" parent="." index="10" instance=ExtResource( 8 )]
 
 light_mask = 3
 margin_left = 350.0
