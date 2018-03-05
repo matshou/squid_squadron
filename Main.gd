@@ -3,6 +3,8 @@ extends Node
 export (PackedScene) var Mob
 var score
 
+export (bool) var play_music = true 
+
 func _ready():
 	randomize()
 
@@ -14,8 +16,9 @@ func player_hit():
 
 func game_over():
 	$Player.hide()
-	$Music.stop()
-	$DeathSound.play()
+	if (play_music):
+		$Music.stop()
+		$DeathSound.play()
 	$ScoreTimer.stop()
 	$MobTimer.stop()
 	$HUD.show_game_over()
@@ -23,7 +26,8 @@ func game_over():
 func new_game():
 	score = 0
 	$HUD.reset_lives()
-	$Music.play()
+	if (play_music):
+		$Music.play()
 	$HUD.update_score(score)
 	$HUD.show_message("Get Ready")
 	$Player.start($StartPosition.position)
