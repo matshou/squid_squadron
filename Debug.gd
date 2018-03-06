@@ -17,8 +17,8 @@ func updatePositionInfo(var vector):
 	updateText(POSITION, str("pos: ", round(vector.x), ", ", round(vector.y)))
 
 func updateInputInfo(var input):
-	var key1 = input[0].key.substr(3, input[0].key.length() - 3) if (input[0] != null) else "n/a"
-	var key2 = input[1].key.substr(3, input[1].key.length() - 3) if (input[1] != null) else "n/a"
+	var key1 = input[0].substr(3, input[0].length() - 3) if (input[0] != null) else "n/a"
+	var key2 = input[1].substr(3, input[1].length() - 3) if (input[1] != null) else "n/a"
 	updateText(INPUT, str("input: ", key1, ", ", key2))
 
 func _process(delta):

@@ -3,7 +3,8 @@ extends Node
 export (PackedScene) var Mob
 var score
 
-export (bool) var play_music = true 
+export (bool) var play_music = true     # set to false to mute music
+export (bool) var spawn_creeps = true   # set to false to disable creep spawning
 
 func _ready():
 	randomize()
@@ -34,7 +35,8 @@ func new_game():
 	$StartTimer.start()
 
 func _on_StartTimer_timeout():
-	$MobTimer.start()
+	if (spawn_creeps):
+		$MobTimer.start()
 	$ScoreTimer.start()
 
 func _on_ScoreTimer_timeout():

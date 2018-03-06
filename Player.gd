@@ -3,9 +3,11 @@ extends Area2D
 signal hit
 
 # how fast the player will move (pixels/sec)
-export (int) var MAX_SPEED = 250
-export (int) var ACCELERATION = 25
+export (int) var MAX_VELOCITY = 350
+export (int) var ACCELERATION = 20
 export (int) var FRICTION = 7
+
+export (bool) var play_animation = true
 
 var velocity = Velocity.new(self)
 var screensize  # size of the game window
@@ -44,52 +46,37 @@ class Velocity:
 			value =v
 
 	var motion_vector = Vector2()
-	var input_vector = Vector2()
-	var move_vector = Vector2()
-	# used for printing debug info
-	var key_pressed = [ null, null ]
+	var input_key = [ null, null ]  # used for printing debug info
 	
-	func resetKeyPressed(var axis):
-		key_pressed[axis] = null
+	func resetInputKey(var axis):
+		input_key[axis] = null
 	
-	func resetInputVector():
-		input_vector = Vector2()
-	
-	func setInputVector(var direction):
+	func isKeyPressedOn(var axis):
+		return input_key[axis] != null
+
+	func updateData(var direction):
+		updateMotionVector(direction)
+		input_key[direction.axis] = direction.key
+		
+	func updateMotionVector(var direction):
 		match direction.axis:
 			AXIS_X:
-				input_vector.x = direction.value
-				key_pressed[AXIS_X] = direction
+				var acceleration = player.ACCELERATION
+				#if (input_key[AXIS_Y] != null):
+				#	acceleration = round(player.ACCELERATION * cos(45))
+				
+				motion_vector.x += (acceleration * direction.value)
+				if (abs(motion_vector.x) > player.MAX_VELOCITY):
+					motion_vector.x = player.MAX_VELOCITY if (motion_vector.x > 0) else -player.MAX_VELOCITY
 			AXIS_Y:
-				input_vector.y = direction.value
-				key_pressed[AXIS_Y] = direction
-	
-	func move(var delta):
-		applyFriction()
-		move_vector = input_vector + motion_vector
-		#if (move_vector.x == move_vector.y):
-		#	move_vector = move_vector.x * sqrt(2)
-		#else: sqrt(pow(move_vector.x, 2) + pow(move_vector.y, 2))
-			
-		# Clamp the player position to prevent him from leaving the screen
-		player.position += move_vector * delta
-		player.position.x = clamp(player.position.x, 0, player.screensize.x)
-		player.position.y = clamp(player.position.y, 0, player.screensize.y)
+				var acceleration = player.ACCELERATION 
+				#if (input_key[AXIS_X] != null):
+				#	acceleration = round(player.ACCELERATION * cos(45))
+
+				motion_vector.y += (acceleration * direction.value)
+				if (abs(motion_vector.y) > player.MAX_VELOCITY):
+					motion_vector.y = player.MAX_VELOCITY if (motion_vector.y > 0) else -player.MAX_VELOCITY
 		
-		printDebug()
-		
-	func accelerate(var direction):
-		match direction.axis:
-			AXIS_Y:
-				motion_vector.y += (player.ACCELERATION * direction.value)
-				if (abs(motion_vector.y) > player.MAX_SPEED):
-					motion_vector.y = player.MAX_SPEED if (motion_vector.y > 0) else -player.MAX_SPEED
-					
-			AXIS_X:
-				motion_vector.x += (player.ACCELERATION * direction.value)
-				if (abs(motion_vector.x) > player.MAX_SPEED):
-					motion_vector.x = player.MAX_SPEED if (motion_vector.x > 0) else -player.MAX_SPEED
-	
 	func applyFriction():
 		var f_vec = Vector2(0, 0)
 		
@@ -108,19 +95,40 @@ class Velocity:
 			f_vec.y = player.FRICTION if (res < 0) else -motion_vector.y
 			
 		motion_vector += f_vec
+	
+	func move(var delta):
+		applyFriction()
 		
-	# Update velocity information in the debug panel
-	func printDebug():
-		player.debug.updateVectorInfo(move_vector)
-		player.debug.updateMotionInfo(motion_vector)
+		# TESTING
+		var m = sqrt(pow(motion_vector.x, 2) + pow(motion_vector.y, 2))
+		if (m > player.MAX_VELOCITY):
+			motion_vector *= (1 - (m - player.MAX_VELOCITY)/motion_vector.length()) 
+			motion_vector.x = floor(motion_vector.x)
+			motion_vector.y = floor(motion_vector.y)
+		print(motion_vector.length())
+		
+		#if (move_vector.x == move_vector.y):
+		#	move_vector = (move_vector.x * sqrt(2)
+		#else: sqrt(pow(move_vector.x, 2) + pow(move_vector.y, 2))
+			
+		# Clamp the player position to prevent him from leaving the screen
+		player.position += motion_vector * delta
+		player.position.x = clamp(player.position.x, 0, player.screensize.x)
+		player.position.y = clamp(player.position.y, 0, player.screensize.y)
+		
+		player.debug.updateMotionInfo(motion_vector.abs())
 		player.debug.updatePositionInfo(player.position)
-		player.debug.updateInputInfo(key_pressed)
+		player.debug.updateInputInfo(input_key)
 
 func hasMomentum():
 	return (velocity.motion_vector.length() > 0)
 
+func getPlayerSpeed():
+	return velocity.motion_vector.abs().x + velocity.motion_vector.abs().y
+
 func start(pos):
-	position = pos 
+	position = pos
+	$AnimatedSprite.animation = "neutral"
 	show()
 	$CollisionShape2D.disabled = false
 
@@ -131,38 +139,37 @@ func _ready():
 # Called every frame. Delta is time since last frame.
 # Update game logic here.
 func _process(delta):
-	
-	velocity.resetInputVector()
-	
+
 	if Input.is_action_pressed(velocity.east.key):
-		velocity.setInputVector(velocity.east)
-		velocity.accelerate(velocity.east)
+		velocity.updateData(velocity.east)
 	elif Input.is_action_pressed(velocity.west.key):
-		velocity.setInputVector(velocity.west)
-		velocity.accelerate(velocity.west)
-	else: velocity.resetKeyPressed(Velocity.AXIS_X)
+		velocity.updateData(velocity.west)
+	else: velocity.resetInputKey(Velocity.AXIS_X)
 	
 	if Input.is_action_pressed(velocity.south.key):
-		velocity.setInputVector(velocity.south)
-		velocity.accelerate(velocity.south)
+		velocity.updateData(velocity.south)
 	elif Input.is_action_pressed(velocity.north.key):
-		velocity.setInputVector(velocity.north)
-		velocity.accelerate(velocity.north)
-	else: velocity.resetKeyPressed(Velocity.AXIS_Y)
+		velocity.updateData(velocity.north)
+	else: velocity.resetInputKey(Velocity.AXIS_Y)
 		
 	if (hasMomentum()):
 		velocity.move(delta)
-		$AnimatedSprite.play()
-	else:
+		if (play_animation == true):
+			#if (getPlayerSpeed() / MAX_SPEED > 0.90):
+			#	if ($AnimatedSprite.frame == 0):
+			#		$AnimatedSprite.stop()
+			#elif (!$AnimatedSprite.is_playing()):
+			$AnimatedSprite.play()
+				
+			if (velocity.isKeyPressedOn(Velocity.AXIS_X)):
+				$AnimatedSprite.animation = "right"
+				$AnimatedSprite.flip_v = false
+				$AnimatedSprite.flip_h = velocity.motion_vector.x < 0
+			elif (velocity.isKeyPressedOn(Velocity.AXIS_Y)):
+				$AnimatedSprite.animation = "up"
+				$AnimatedSprite.flip_v = velocity.motion_vector.y > 0	
+	elif (play_animation == true):
 		$AnimatedSprite.stop()
-	
-	if velocity.move_vector.x != 0:
-		$AnimatedSprite.animation = "right"
-		$AnimatedSprite.flip_v = false
-		$AnimatedSprite.flip_h = velocity.move_vector.x < 0
-	elif velocity.move_vector.y != 0:
-		$AnimatedSprite.animation = "up"
-		$AnimatedSprite.flip_v = velocity.move_vector.y > 0
 
 func _on_Player_body_entered(body):
 	emit_signal("hit")

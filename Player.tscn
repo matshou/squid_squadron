@@ -1,20 +1,28 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://Player.gd" type="Script" id=1]
-[ext_resource path="res://assets/art/playerGrey_walk2.png" type="Texture" id=2]
-[ext_resource path="res://assets/art/playerGrey_up1.png" type="Texture" id=3]
+[ext_resource path="res://assets/art/playerGrey_walk1.png" type="Texture" id=2]
+[ext_resource path="res://assets/art/playerGrey_walk2.png" type="Texture" id=3]
+[ext_resource path="res://assets/art/playerGrey_up2.png" type="Texture" id=4]
+[ext_resource path="res://assets/art/playerGrey_up1.png" type="Texture" id=5]
+[ext_resource path="res://assets/art/playerGrey_neutral.png" type="Texture" id=6]
 
 [sub_resource type="SpriteFrames" id=1]
 
 animations = [ {
-"frames": [ ExtResource( 2 ) ],
+"frames": [ ExtResource( 2 ), ExtResource( 3 ) ],
 "loop": true,
 "name": "right",
-"speed": 5.0
+"speed": 3.0
 }, {
-"frames": [ ExtResource( 3 ) ],
+"frames": [ ExtResource( 4 ), ExtResource( 5 ) ],
 "loop": true,
 "name": "up",
+"speed": 3.0
+}, {
+"frames": [ ExtResource( 6 ) ],
+"loop": true,
+"name": "neutral",
 "speed": 5.0
 } ]
 
@@ -24,7 +32,7 @@ custom_solver_bias = 0.0
 radius = 10.5454
 height = 42.9164
 
-[node name="Player" type="Area2D"]
+[node name="Player" type="Area2D" index="0"]
 
 position = Vector2( 250.547, 379.782 )
 input_pickable = true
@@ -36,9 +44,10 @@ audio_bus_override = false
 audio_bus_name = "Master"
 script = ExtResource( 1 )
 _sections_unfolded = [ "Collision", "Linear" ]
-MAX_SPEED = 250
-ACCELERATION = 25
+MAX_VELOCITY = 350
+ACCELERATION = 20
 FRICTION = 7
+play_animation = false
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="." index="0"]
 
@@ -64,6 +73,13 @@ autostart = false
 
 process_mode = 1
 wait_time = 0.15
+one_shot = false
+autostart = false
+
+[node name="SwimAnimation" type="Timer" parent="." index="4"]
+
+process_mode = 1
+wait_time = 1.0
 one_shot = false
 autostart = false
 

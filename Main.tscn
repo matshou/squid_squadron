@@ -15,13 +15,17 @@ _data = {
 "points": PoolVector2Array( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 480, 0, 0, 0, 0, 0, 480, 720, 0, 0, 0, 0, 0, 720, 0, 0, 0, 0, 0, 0 )
 }
 
-[node name="Main" type="Node" index="0"]
+[node name="Main" type="Node"]
 
 script = ExtResource( 1 )
 Mob = ExtResource( 2 )
 play_music = false
+spawn_creeps = false
 
 [node name="Player" parent="." index="0" instance=ExtResource( 3 )]
+
+editor/display_folded = true
+MAX_VELOCITY = 350
 
 [node name="Music" type="AudioStreamPlayer" parent="." index="1"]
 
@@ -101,3 +105,4 @@ margin_bottom = 63.0
 [connection signal="start_game" from="HUD" to="." method="new_game"]
 
 
+[editable path="Player"]
