@@ -5,8 +5,9 @@ signal hit
 # how fast the player will move (pixels/sec)
 export (int) var MAX_VELOCITY = 350
 export (int) var ACCELERATION = 20
-export (int) var FRICTION = 7
+export (int) var FRICTION = 7         # set to 0 to disable
 
+# if set to false no player animations will be played
 export (bool) var play_animation = true
 
 var velocity = Velocity.new(self)
@@ -17,7 +18,7 @@ onready var debug = get_node("../Debug")
 
 class Velocity:
 	# Use this instance to reach player variables
-	var player
+	var player setget constVar
 	
 	func _init(var owner):
 		player = owner
@@ -25,58 +26,60 @@ class Velocity:
 	enum { AXIS_X, AXIS_Y }
 	
 	# Constant variables, DON'T ALTER VALUES!
-	var north = Direction.new("ui_up", AXIS_Y, -1) setget privateSet
-	var south = Direction.new("ui_down", AXIS_Y, 1) setget privateSet
-	var east = Direction.new("ui_right", AXIS_X, 1) setget privateSet
-	var west = Direction.new("ui_left", AXIS_X, -1) setget privateSet
+	var north = Direction.new("ui_up", AXIS_Y, -1) setget constVar
+	var south = Direction.new("ui_down", AXIS_Y, 1) setget constVar
+	var east = Direction.new("ui_right", AXIS_X, 1) setget constVar
+	var west = Direction.new("ui_left", AXIS_X, -1) setget constVar
 	
-	func privateSet():
-		print("Error: Access to private variable!")
-		print_stack()
+	# Use this method as a 'setter' for all constant vars
+	# Prevents functions outside local scope from changing values
+	func constVar():
 		pass
 	
 	class Direction:
-		var key
-		var axis
-		var value
+		var key setget constVar
+		var axis setget constVar
+		var value setget constVar
+		
+		func constVar():
+			pass
 		
 		func _init(var k, var a, var v):
 			key = k
-			axis =a
-			value =v
+			axis = a
+			value = v
 
 	var motion_vector = Vector2()
 	var input_key = [ null, null ]  # used for printing debug info
 	
+	# Input key should be reset on every tick if the player is not pressing
+	# one of the two buttons on the given axis
 	func resetInputKey(var axis):
 		input_key[axis] = null
 	
 	func isKeyPressedOn(var axis):
 		return input_key[axis] != null
 
+	# Gets called each tick on every player control input
 	func updateData(var direction):
 		updateMotionVector(direction)
 		input_key[direction.axis] = direction.key
-		
+	
+	# Add motion to player by accelerating in the given direction
 	func updateMotionVector(var direction):
+		var acceleration = player.ACCELERATION * direction.value
 		match direction.axis:
 			AXIS_X:
-				var acceleration = player.ACCELERATION
-				#if (input_key[AXIS_Y] != null):
-				#	acceleration = round(player.ACCELERATION * cos(45))
-				
-				motion_vector.x += (acceleration * direction.value)
+				motion_vector.x += acceleration
 				if (abs(motion_vector.x) > player.MAX_VELOCITY):
 					motion_vector.x = player.MAX_VELOCITY if (motion_vector.x > 0) else -player.MAX_VELOCITY
 			AXIS_Y:
-				var acceleration = player.ACCELERATION 
-				#if (input_key[AXIS_X] != null):
-				#	acceleration = round(player.ACCELERATION * cos(45))
-
-				motion_vector.y += (acceleration * direction.value)
+				motion_vector.y += acceleration
 				if (abs(motion_vector.y) > player.MAX_VELOCITY):
 					motion_vector.y = player.MAX_VELOCITY if (motion_vector.y > 0) else -player.MAX_VELOCITY
-		
+	
+	# Friction is the counter-force to player's movements.
+	# It should be applied each tick regardless of player input
 	func applyFriction():
 		var f_vec = Vector2(0, 0)
 		
@@ -96,26 +99,27 @@ class Velocity:
 			
 		motion_vector += f_vec
 	
+	# Get magnitude of motion vector
+	func getVelocity():
+		return sqrt(pow(motion_vector.x, 2) + pow(motion_vector.y, 2))
+	
 	func move(var delta):
-		applyFriction()
+		# apply friction only if it's enabled
+		if (player.FRICTION > 0):
+			applyFriction()
 		
-		# TESTING
-		var m = sqrt(pow(motion_vector.x, 2) + pow(motion_vector.y, 2))
-		if (m > player.MAX_VELOCITY):
-			motion_vector *= (1 - (m - player.MAX_VELOCITY)/motion_vector.length()) 
-			motion_vector.x = floor(motion_vector.x)
-			motion_vector.y = floor(motion_vector.y)
-		print(motion_vector.length())
-		
-		#if (move_vector.x == move_vector.y):
-		#	move_vector = (move_vector.x * sqrt(2)
-		#else: sqrt(pow(move_vector.x, 2) + pow(move_vector.y, 2))
+		# Total player velocity should not exceed max velocity value
+		var velocity = getVelocity()
+		if (velocity > player.MAX_VELOCITY):
+			motion_vector *= (1 - (velocity - player.MAX_VELOCITY)/motion_vector.length()) 
+			motion_vector = motion_vector.floor()
 			
 		# Clamp the player position to prevent him from leaving the screen
 		player.position += motion_vector * delta
 		player.position.x = clamp(player.position.x, 0, player.screensize.x)
 		player.position.y = clamp(player.position.y, 0, player.screensize.y)
 		
+		# Update debug panel with new data
 		player.debug.updateMotionInfo(motion_vector.abs())
 		player.debug.updatePositionInfo(player.position)
 		player.debug.updateInputInfo(input_key)
@@ -175,15 +179,17 @@ func _on_Player_body_entered(body):
 	emit_signal("hit")
 	$CollisionShape2D.disabled = true   # makes the player invulnerable
 	if (HUD.lives_remaining > 0):
-		$HitRecovery.start()       # keeps the player invulnerable and blinking
-		$HitAnimation.start()      # regulates the blinking effect
+		$HitRecovery.start()            # keeps the player invulnerable and blinking
+		if (play_animation == true):
+			$HitAnimation.start()       # regulates the blinking effect
 
 # Gets called when the player hit recovery phase ends,
 # stop blinking and become vulnerable again.
 func _on_HitRecovery_timeout():
 	$CollisionShape2D.disabled = false
-	if (!is_visible()): show()
-	$HitAnimation.stop()
+	if (play_animation == true):
+		if (!is_visible()): show()
+		$HitAnimation.stop()
 
 # This will produce a blinking affect indicating
 # that the player has been recently hit and is recovering
